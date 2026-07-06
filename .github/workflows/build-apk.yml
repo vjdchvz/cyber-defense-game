@@ -1,0 +1,82 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Debug APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Sync web assets
+        run: npx cap sync android
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Grant Gradle permission
+        working-directory: android
+        run: chmod +x gradlew
+
+      - name: Build Debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Rename APK
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk \
+             cyber-defense-v1.0.0.apk
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cyber-defense-v1.0.0
+          path: cyber-defense-v1.0.0.apk
+          retention-days: 90
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.0
+          name: "Cyber Defense v1.0.0"
+          body: |
+            ## 🛡️ Cyber Defense v1.0.0
+            Cybersecurity Tower Defense Game — Educational Android App
+
+            ### Install on Android
+            1. Download **cyber-defense-v1.0.0.apk** below
+            2. On your device: **Settings → Security → Unknown Sources → Enable**
+            3. Open the APK and tap **Install**
+
+            ### What's included
+            - 8 cybersecurity towers: Firewall, Antivirus, IDS, Encryption, Honeypot, Sandbox, Zero Trust, AI Hunter
+            - 8 virus types: Byte, Worm, Trojan, Spyware, Ransomware, Rootkit, DDoS Bot, APT (boss)
+            - 12 waves with progressive difficulty and boss encounters
+            - Tower upgrade system (2 levels per tower)
+            - Touch-optimized for Android landscape
+          files: cyber-defense-v1.0.0.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

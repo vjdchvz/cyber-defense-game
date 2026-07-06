@@ -1,0 +1,11 @@
+{
+  "appId": "com.hirush.cyberdefense",
+  "appName": "Cyber Defense",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}
